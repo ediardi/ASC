@@ -58,7 +58,8 @@ jns init0
 
 
 
-
+cmpl $0,p
+je p0
 
 
 mov p,%ecx
@@ -91,12 +92,16 @@ readl:
 
 loop readl
 
+p0:
+
 pushl $k
 pushl $formatscanf
 call scanf
 popl %ebx
 popl %ebx
 
+cmpl $0,k
+je k0
 
 kloop:
 
@@ -274,6 +279,8 @@ kloop:
 subl $1,k
 jnz kloop
 
+k0:
+
 mov $0,%esi
 print0:
 	
@@ -311,6 +318,9 @@ print0:
 	pusha
 	push $formatendl
 	call printf
+	popl %ebx
+	push $0
+	call fflush
 	popl %ebx
 	popa
 
