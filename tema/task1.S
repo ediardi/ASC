@@ -6,6 +6,7 @@ k: .space 4
 p: .space 4
 x: .space 4
 y: .space 4
+trash: .long 0
 cript: .space 4
 key: .space 320
 word: .space 11
@@ -15,8 +16,11 @@ mask: .long 0x000000ff
 formatscanf: .asciz "%ld"
 formatprintf: .asciz "%ld "
 formatpas: .asciz "%s"
+formttrash: .asciz " %c"
+formtchar: .asciz "%c"
 formatendl: .asciz "\n"
-hexp: .asciz "%hhX "
+oxstr: .asciz "0x"
+hexp: .asciz "%02hhX"
 .text
 .global main
 main:
@@ -396,9 +400,59 @@ je encript
 
 decript:
 
-jmp final
+pushl $trash
+pushl $formttrash
+call scanf
+popl %ebx
+popl %ebx
+pushl $trash
+pushl $formttrash
+call scanf
+popl %ebx
+popl %ebx
+
+mov $0,%ecx
+whilec:
+	push %ecx
+	pushl $trash
+	pushl $hexp
+	call scanf
+	popl %ebx
+	popl %ebx
+	popl %ecx
+	cmp $1,%eax
+	jne final
+	
+	mov trash,%ebx
+	lea keyc,%eax
+	add %ecx,%eax
+	mov (%eax),%edx
+	xor %ebx,%edx
+	
+	and mask,%edx
+	mov %edx,printvar
+
+	pusha
+		push printvar
+		push $formtchar
+		call printf
+		popl %ebx
+		popl %ebx
+		push $0
+		call fflush
+		popl %ebx
+	popa
+
+	inc %ecx
+jmp whilec
 
 encript:
+
+pusha
+push $oxstr
+call printf
+popl %ebx
+popa
 
 pushl $word
 call gets
@@ -411,47 +465,44 @@ mov $0,%ecx
 hexaprint:
 
 
-lea word,%eax
-add %ecx,%eax
-mov (%eax),%ebx
-lea keyc,%eax
-add %ecx,%eax
-mov (%eax),%edx
-xor %ebx,%edx
+	lea word,%eax
+	add %ecx,%eax
+	mov (%eax),%ebx
 
-b1:
-and mask,%edx
-mov %edx,printvar
-movb %dl,(%eax)
+	cmp $0,%bl
+	je final
+	lea keyc,%eax
+	add %ecx,%eax
+	mov (%eax),%edx
+	xor %ebx,%edx
 
-pusha
-	push printvar
-	push $hexp
-	call printf
-	popl %ebx
-	popl %ebx
-	push $0
-	call fflush
-	popl %ebx
-popa
+	b1:
+	and mask,%edx
+	mov %edx,printvar
+	movb %dl,(%eax)
 
-inc %ecx
-cmp $10,%ecx
+	pusha
+		push printvar
+		push $hexp
+		call printf
+		popl %ebx
+		popl %ebx
+		push $0
+		call fflush
+		popl %ebx
+	popa
+
+	inc %ecx
+	cmp $10,%ecx
 jne hexaprint
 
 
-#print and test 10 chars
-#whapp exemplu
+#whapp exemplu task0
+#cazul cu 0X
 
 final:
 push $formatendl
 call printf
-popl %ebx
-
-push $keyc
-push $formatpas
-call printf
-popl %ebx
 popl %ebx
 
 push $0
